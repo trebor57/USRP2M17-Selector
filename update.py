@@ -1,35 +1,36 @@
-import json
 import requests
-import sys
-import codecs
+import json
 
-# Ensure proper encoding for both Python 2 and 3
-if sys.version_info[0] < 3:
-    # Python 2: Force UTF-8 encoding for stdout
-    sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
-else:
-    # Python 3: Use UTF-8 encoding
-    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer)
+API_URL = "https://dvref.com/mrefd/reflectors/?include_description=true"
+RAW_OUTPUT = "raw_reflectors.json"
+OUTPUT = "reflector_options.txt"
 
-def update_reflector_file(data):
-    with codecs.open('reflector_options.txt', 'w', encoding='utf-8') as f:
-        for item in data['reflectors']:
-            designator = "M17-{}".format(item['designator'])
-            sponsor = item['sponsor']
-            country = item['country']
-            ipv4 = item['ipv4']
-            url = item['url']
-            
-            # Write the reflector details to the file in the desired format
-            f.write(u"{} - {} ({}) - Country: {} - URL: {}\n".format(
-                designator, sponsor, ipv4, country, url))
+def update_reflector_file(reflectors):
+    with open(OUTPUT, "w", encoding="utf-8") as f:
+        for r in reflectors:
+            # Build name: Prefer 'name', fall back to 'sponsor'
+            display_name = r.get('name') or r.get('sponsor') or ''
+            designator = r.get('designator', '')
+            country = r.get('country', 'N/A')
+            ip = r.get('ipv4') or r.get('ipv6') or 'N/A'
+            url = r.get('url', '(none)')
+            if designator and ip:
+                line = f"M17-{designator} - {display_name} ({ip}) - Country: {country} - URL: {url}\n"
+                f.write(line)
 
 def main():
-    response = requests.get("https://dvref.com/mrefd/json/?format=json")
-    data = response.json()
-    
-    update_reflector_file(data)
-    print(u"Reflectors updated successfully!")
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    resp = requests.get(API_URL, headers=headers)
+    resp.raise_for_status()
+    # Save raw JSON for inspection
+    with open(RAW_OUTPUT, "w", encoding="utf-8") as rawfile:
+        rawfile.write(resp.text)
+    print(f"Saved raw JSON to {RAW_OUTPUT}")
+
+    data = resp.json()
+    reflectors = data.get('reflectors', [])
+    update_reflector_file(reflectors)
+    print("Reflector options updated from API!")
 
 if __name__ == "__main__":
     main()
