@@ -1,36 +1,62 @@
-import requests
-import json
+# -*- coding: utf-8 -*-
+from __future__ import print_function, unicode_literals
+import json, unicodedata, requests, re, io
 
-API_URL = "https://dvref.com/mrefd/reflectors/?include_description=true"
-RAW_OUTPUT = "raw_reflectors.json"
+URL = "https://hostfiles.refcheck.radio/M17Hosts.json"
 OUTPUT = "reflector_options.txt"
 
-def update_reflector_file(reflectors):
-    with open(OUTPUT, "w", encoding="utf-8") as f:
-        for r in reflectors:
-            # Build name: Prefer 'name', fall back to 'sponsor'
-            display_name = r.get('name') or r.get('sponsor') or ''
-            designator = r.get('designator', '')
-            country = r.get('country', 'N/A')
-            ip = r.get('ipv4') or r.get('ipv6') or 'N/A'
-            url = r.get('url', '(none)')
-            if designator and ip:
-                line = f"M17-{designator} - {display_name} ({ip}) - Country: {country} - URL: {url}\n"
-                f.write(line)
+def _norm(s):
+    if not s: return u""
+    return unicodedata.normalize("NFKC", s).replace(u"\u00a0", u" ").strip()
+
+def norm_designator(d):
+    import re
+    d = _norm(d).upper()
+    if not d:
+        return u"M17-???"
+    m = re.match(r'^(?:M17[-\s]?)([A-Z0-9]+)$', d)
+    if m:
+        return u"M17-" + m.group(1)
+    if re.match(r'^[A-Z0-9]+$', d):
+        return u"M17-" + d
+    return d
+
+def pick_display(entry):
+    for k in ("name", "sponsor", "slug"):
+        v = _norm(entry.get(k))
+        if v: return v
+    return entry.get("designator", u"UNKNOWN")
+
+def pick_ip(entry):
+    return entry.get("ipv4") or entry.get("ipv6") or u"unknown"
+
+def pick_url(entry):
+    return entry.get("url") or u"N/A"
+
+def build_lines(reflectors):
+    lines = []
+    reflectors = sorted(reflectors, key=lambda r: _norm(r.get("designator")))
+    for r in reflectors:
+        designator = norm_designator(r.get("designator"))
+        display    = pick_display(r)
+        ip         = pick_ip(r)
+        country    = r.get("country") or u"??"
+        url        = pick_url(r)
+        lines.append(u"{} - {} ({}) - Country: {} - URL: {}".format(
+            designator, display, ip, country, url
+        ))
+    return lines
 
 def main():
-    headers = {'User-Agent': 'Mozilla/5.0'}
-    resp = requests.get(API_URL, headers=headers)
-    resp.raise_for_status()
-    # Save raw JSON for inspection
-    with open(RAW_OUTPUT, "w", encoding="utf-8") as rawfile:
-        rawfile.write(resp.text)
-    print(f"Saved raw JSON to {RAW_OUTPUT}")
-
-    data = resp.json()
-    reflectors = data.get('reflectors', [])
-    update_reflector_file(reflectors)
-    print("Reflector options updated from API!")
+    print("Downloading latest M17Hosts.json...")
+    r = requests.get(URL, timeout=30, headers={"User-Agent": "curl/8"})
+    r.raise_for_status()
+    data = r.json()
+    lines = build_lines(data.get("reflectors", []))
+    # io.open with encoding works in both Py2 and Py3
+    with io.open(OUTPUT, "w", encoding="utf-8") as f:
+        f.write(u"\n".join(lines))
+    print("Wrote {}".format(OUTPUT))
 
 if __name__ == "__main__":
     main()
