@@ -158,7 +158,8 @@ AllStarLink3 Specific:  I added NODE1=1917 to [globals] like this, is it correct
 
 
 ## License
-This project is licensed under a custom **No Modification / No Redistribution** license.  
-You may use the software for personal or internal purposes only.  
-Modification, republishing, or commercial use is strictly prohibited.  
-See [LICENSE](LICENSE) for full details.
+© 2025 Michael Webb (WG5EEK).  
+Licensed under a **No Modification / No Redistribution** license.  
+Use is permitted only for personal, non-commercial purposes.  
+Modification, re-release, AI training, or redistribution are strictly prohibited.  
+See [LICENSE](LICENSE) for full legal terms and enforcement rights.
