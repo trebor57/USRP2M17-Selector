@@ -158,6 +158,7 @@ AllStarLink3 Specific:  I added NODE1=1917 to [globals] like this, is it correct
 
 
 ## License
-Source-available license © 2025 Michael Webb
-Use is permitted, but modification, redistribution, or re-release is forbidden.  
-See [LICENSE](LICENSE) for full terms.
+This project is licensed under a custom **No Modification / No Redistribution** license.  
+You may use the software for personal or internal purposes only.  
+Modification, republishing, or commercial use is strictly prohibited.  
+See [LICENSE](LICENSE) for full details.
