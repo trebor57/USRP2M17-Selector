@@ -157,3 +157,7 @@ AllStarLink3 Specific:  I added NODE1=1917 to [globals] like this, is it correct
 ![image](https://github.com/user-attachments/assets/744dc092-36d5-4381-88a1-87fe7883f94a)
 
 
+## License
+Source-available license © 2025 Michael Webb (WG5EEK).  
+Use is permitted, but modification, redistribution, or re-release is forbidden.  
+See [LICENSE](LICENSE) for full terms.
